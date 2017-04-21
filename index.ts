@@ -7,20 +7,22 @@ import * as xml2js from 'xml2js';
 import * as cheerio from 'cheerio';
 import { writeFileSync } from 'fs';
 
-const ENDPOINT = process.env.NODE_ENV !== 'production' ?
-	'http://www.interieur.gouv.fr/avotreservice/elections/telechargements/EssaiPR2017' :
+export const IS_TEST = process.env.NODE_ENV !== 'production';
+export const ENDPOINT = IS_TEST ?
+	'http://localhost:8000/' :
 	'http://elections.interieur.gouv.fr/telechargements/PR2017/';
 
-const {
-	ROUND = 1,
+export const {
+	ROUND = 1, // Set $ROUND to '2' for second round
 } = process.env;
 
 /**
  * Convert XML blob into JSON blob
+ * This is probably a bit dumb considering I added Cheerio later but... /shrug
  * @param  {string} xmlStr XML string
  * @return {object}        JSON representation of XML
  */
-const convertXML = async (xmlStr) => new Promise((resolve, reject) => {
+export const convertXML = async (xmlStr: string) => new Promise((resolve, reject) => {
 	xml2js.parseString(xmlStr, {
 		explicitArray: false,
 		normalizeTags: true,
@@ -40,47 +42,13 @@ const convertXML = async (xmlStr) => new Promise((resolve, reject) => {
 const getIndex = async () => convertXML((await axios.get(`${ENDPOINT}/resultatsT${ROUND}/index.xml`)).data);
 
 /**
- * Diff two indices to get the updated regions and departements
- * @param  {FEIndex} lastIdx     The last index used for fetching
- * @param  {FEIndex} currentIdx  The new index to diff against
- * @return {object}              Diffed version of indices
+ * Get communes from index, fetch each commune result, combine into object
+ * @param  {FEDepartement} d    A departement object from the index file
+ * @return {Promise<FEResult>}            Promise resolving to a FEResult object
  */
-const diffIndices = (lastIdx: FEIndex, currentIdx: FEIndex) => {
-	const { departements: departementsOld, regions: regionsOld } = lastIdx;
-	const { departements: departementsNew, regions: regionsNew } = currentIdx;
-
-	const updatedDepartements = departementsNew.departement.map((d) => {
-		const old = departementsOld.departement.find(oldD => oldD.coddpt + oldD.codreg === d.coddpt + d.codreg);
-
-		const lastUpdatedNew = new Date(`${d.datederextract}T${d.heurederextract}`);
-		const lastUpdatedOld = new Date(`${old.datederextract}T${old.heurederextract}`);
-
-		return lastUpdatedNew > lastUpdatedOld ? d : undefined;
-	}).filter(i => i);
-
-
-	const updatedRegions = regionsNew.region.map((region) => {
-		const old = regionsOld.region.find(oldD => oldD.codreg === region.codreg);
-
-		const lastUpdatedNew = new Date(`${region.datederextract}T${region.heurederextract}`);
-		const lastUpdatedOld = new Date(`${old.datederextract}T${old.heurederextract}`);
-
-		return lastUpdatedNew > lastUpdatedOld ? region : undefined;
-	}).filter(i => i);
-
-	return {
-		departements: {
-			departement: updatedDepartements,
-		},
-		regions: {
-			region: updatedRegions,
-		},
-	};
-};
-
 const fetchResultsDepartement = async (d: FEDepartement) => {
 	const urlDepartement = `${ENDPOINT}/resultatsT${ROUND}/${d.codreg3car}/${d.coddpt3car}`;
-	const summaryData = await convertXML((await axios.get(`${urlDepartement}/${d.coddpt3car}.xml`)).data);
+
 	try {
 		const $ = cheerio.load((await axios.get(`${urlDepartement}/${d.coddpt3car}IDX.xml`)).data);
 		const communeIds = $('communes > commune > codsubcom').map(function(i, el) {
@@ -98,7 +66,7 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 					return $$(this).children().toArray().reduce((coll, child) => {
 						coll[child.tagName] = $$(child).text().trim();
 						return coll;
-					}, {});
+					}, <FECandidat>{});
 				}).toArray();
 
 				collection.push({
@@ -106,8 +74,8 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 					dpt: d.coddpt3car,
 					com: id,
 					candidates,
-					summaryData,
 				});
+
 				return collection;
 			} catch (ee) {
 				console.error(`Error on: ${urlDepartement}/${d.coddpt3car}${id}.xml`);
@@ -116,7 +84,8 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 		}, Promise.resolve([]));
 
 		try {
-			writeFileSync(`./data/${d.codreg3car}-${d.coddpt3car}.json`, JSON.stringify(result), {encoding: 'utf8'});
+			// Backup each departement to JSON in case of failure
+			writeFileSync(`./${IS_TEST ? 'test-data/output' : 'data' }/${d.codreg3car}-${d.coddpt3car}.json`, JSON.stringify(result), {encoding: 'utf8'});
 		} catch (e) {
 			console.error(`Error writing: ${e}`);
 			console.log(result);
@@ -126,23 +95,9 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 	} catch (e) {
 		console.error(`Error on: ${urlDepartement}/${d.coddpt3car}IDX.xml`);
 	}
-
-
-
-	// return {
-	// 	departement: summaryData,
-	// 	communes: await fetchResultsCommune
-	// }
 };
 
-const fetchResultsRegion = async (r: FERegion) => {
-	const url = `${ENDPOINT}/resultatsT${ROUND}/${r.codreg3car}/${r.codreg3car}.xml`;
-	const data = (await axios.get(url)).data;
-	return await convertXML(data);
-};
-
-
-//// Main
+//// Main procedure
 
 getIndex().then(async (data: FEIndex) => {
 	return await data.departements.departement.reduce(async (queue, item) => {
@@ -155,16 +110,15 @@ getIndex().then(async (data: FEIndex) => {
 			console.error(`Error on departement: ${item.coddpt3car}`);
 			return queue;
 		}
-	}, Promise.resolve({}));
+	}, Promise.resolve<FEResult>({}));
 })
 .then(data => {
 	try {
-		writeFileSync('./output.json', JSON.stringify(data), {encoding: 'utf8'});
+		writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/output.json`, JSON.stringify(data), {encoding: 'utf8'});
 	} catch (e) {
 		console.error(e);
 		console.log(data);
 	}
-
 });
 
 
@@ -205,4 +159,24 @@ export interface FERegion {
 	datederextract: string;
 	heurederextract: string;
 	complet: string;
+}
+
+export interface FECandidat {
+	numpanneaucand: string;
+	nompsn: string;
+	prenompsn: string;
+	civilitepsn: string;
+	nbvoix: string;
+	rapportexprime: string;
+	rapportinscrit: string;
+	[key: string]: string;
+}
+
+export interface FEResult {
+	[departement: string]: Array<{
+		name: string;
+		dpt: string;
+		com: string;
+		candidates: Array<FECandidat>;
+	}>;
 }
