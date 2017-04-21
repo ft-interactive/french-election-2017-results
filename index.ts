@@ -4,6 +4,8 @@
 
 import axios from 'axios';
 import * as xml2js from 'xml2js';
+import * as cheerio from 'cheerio';
+import { writeFileSync } from 'fs';
 
 const ENDPOINT = process.env.NODE_ENV !== 'production' ?
 	'http://www.interieur.gouv.fr/avotreservice/elections/telechargements/EssaiPR2017' :
@@ -79,12 +81,58 @@ const diffIndices = (lastIdx: FEIndex, currentIdx: FEIndex) => {
 const fetchResultsDepartement = async (d: FEDepartement) => {
 	const urlDepartement = `${ENDPOINT}/resultatsT${ROUND}/${d.codreg3car}/${d.coddpt3car}`;
 	const summaryData = await convertXML((await axios.get(`${urlDepartement}/${d.coddpt3car}.xml`)).data);
-	const idxDepartement = await convertXML((await axios.get(`${urlDepartement}/${d.coddpt3car}IDX.xml`)).data);
+	try {
+		const $ = cheerio.load((await axios.get(`${urlDepartement}/${d.coddpt3car}IDX.xml`)).data);
+		const communeIds = $('communes > commune > codsubcom').map(function(i, el) {
+			return $(this).text();
+		}).toArray();
 
-	return {
-		departement: summaryData,
-		communes: await fetchResultsCommune
+		const result = await communeIds.reduce(async (queue, id) => {
+			try {
+				const collection = await queue;
+				console.log(`On ${d.coddpt3car}-${id}`);
+
+				const $$ = cheerio.load((await axios.get(`${urlDepartement}/${d.coddpt3car}${id}.xml`)).data);
+
+				const candidates = $$('candidats > candidat').map(function(){
+					return $$(this).children().toArray().reduce((coll, child) => {
+						coll[child.tagName] = $$(child).text().trim();
+						return coll;
+					}, {});
+				}).toArray();
+
+				collection.push({
+					name: $$('libsubcom').text(),
+					dpt: d.coddpt3car,
+					com: id,
+					candidates,
+					summaryData,
+				});
+				return collection;
+			} catch (ee) {
+				console.error(`Error on: ${urlDepartement}/${d.coddpt3car}${id}.xml`);
+				return queue;
+			}
+		}, Promise.resolve([]));
+
+		try {
+			writeFileSync(`./data/${d.codreg3car}-${d.coddpt3car}.json`, JSON.stringify(result), {encoding: 'utf8'});
+		} catch (e) {
+			console.error(`Error writing: ${e}`);
+			console.log(result);
+		}
+
+		return result;
+	} catch (e) {
+		console.error(`Error on: ${urlDepartement}/${d.coddpt3car}IDX.xml`);
 	}
+
+
+
+	// return {
+	// 	departement: summaryData,
+	// 	communes: await fetchResultsCommune
+	// }
 };
 
 const fetchResultsRegion = async (r: FERegion) => {
@@ -92,6 +140,34 @@ const fetchResultsRegion = async (r: FERegion) => {
 	const data = (await axios.get(url)).data;
 	return await convertXML(data);
 };
+
+
+//// Main
+
+getIndex().then(async (data: FEIndex) => {
+	return await data.departements.departement.reduce(async (queue, item) => {
+		try {
+			const collection = await queue;
+			console.info(`On ${item.coddpt3car}`);
+			collection[item.coddpt3car] = await fetchResultsDepartement(item);
+			return collection;
+		} catch (e) {
+			console.error(`Error on departement: ${item.coddpt3car}`);
+			return queue;
+		}
+	}, Promise.resolve({}));
+})
+.then(data => {
+	try {
+		writeFileSync('./output.json', JSON.stringify(data), {encoding: 'utf8'});
+	} catch (e) {
+		console.error(e);
+		console.log(data);
+	}
+
+});
+
+
 
 export interface FEIndex {
 	scrutin: {
