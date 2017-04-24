@@ -58,7 +58,7 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 		const result = await communeIds.reduce(async (queue, id) => {
 			try {
 				const collection = await queue;
-				console.log(`On ${d.coddpt3car}-${id}`);
+				// console.log(`On ${d.coddpt3car}-${id}`);
 
 				const $$ = cheerio.load((await axios.get(`${urlDepartement}/${d.coddpt3car}${id}.xml`)).data);
 
@@ -69,10 +69,13 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 					}, <FECandidat>{});
 				}).toArray();
 
+				const votes = Number($$('mentions > inscrits > nombre').text()) - Number($$('mentions > abstentions > nombre').text());
 				collection.push({
 					name: $$('libsubcom').text(),
-					dpt: d.coddpt3car,
+					reg: d.codreg,
+					dpt: d.codmindpt,
 					com: id,
+					votes,
 					candidates,
 				});
 
@@ -83,17 +86,18 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 			}
 		}, Promise.resolve([]));
 
-		try {
-			// Backup each departement to JSON in case of failure
-			writeFileSync(`./${IS_TEST ? 'test-data/output' : 'data' }/${d.codreg3car}-${d.coddpt3car}.json`, JSON.stringify(result), {encoding: 'utf8'});
-		} catch (e) {
-			console.error(`Error writing: ${e}`);
-			console.log(result);
-		}
+		// try {
+		// 	// Backup each departement to JSON in case of failure
+		// 	writeFileSync(`./${IS_TEST ? 'test-data/output' : 'data' }/${d.codreg3car}-${d.coddpt3car}.json`, JSON.stringify(result), {encoding: 'utf8'});
+		// } catch (e) {
+		// 	console.error(`Error writing: ${e}`);
+		// 	console.log(result);
+		// }
 
 		return result;
 	} catch (e) {
 		console.error(`Error on: ${urlDepartement}/${d.coddpt3car}IDX.xml`);
+		return [];
 	}
 };
 
@@ -113,6 +117,7 @@ getIndex().then(async (data: FEIndex) => {
 	}, Promise.resolve<FEResult>({}));
 })
 .then(data => {
+	console.log('done');
 	try {
 		writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/output.json`, JSON.stringify(data), {encoding: 'utf8'});
 	} catch (e) {
@@ -177,6 +182,8 @@ export interface FEResult {
 		name: string;
 		dpt: string;
 		com: string;
+		reg: string;
+		votes: string;
 		candidates: Array<FECandidat>;
 	}>;
 }
