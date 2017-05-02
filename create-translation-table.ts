@@ -2,7 +2,7 @@
  * Create a translation table
  */
 
-const insee = require('./data/insee-codes.json');
+const _insee = require('./data/communes-qgis.json');
 const gov   = require('./data/gov-codes.json');
 const diff  = require('./data/IDS_DIFF.json');
 const {compareTwoStrings: compare} = require('string-similarity');
@@ -17,6 +17,14 @@ const unmatched2: string[] = [];
 const unmatched3: string[] = [];
 const unmatched4: string[] = [];
 const lowDiceScore: string[] = [];
+
+const insee = _insee.reduce((last: any, curr: any) => {
+	last[curr.insee] = {
+		code: curr.insee,
+		comName: curr.nom,
+	};
+	return last;
+}, {});
 
 console.log(`Total, Ministère Interieur dataset: ${Object.keys(gov).length}`);
 console.log(`Total, INSEE dataset: ${Object.keys(insee).length}`);
@@ -128,7 +136,8 @@ const table = Object.entries(gov).reduce((col: any, [code, data]) => {
 	return col;
 }, {});
 
-function checkScore(string1: string, string2: string, code: string) {
+function checkScore(_string1: string, string2: string, code: string) {
+	const string1 = remove(_string1).toUpperCase();
 	try {
 		const dice = compare(string1, string2).toFixed(2);
 		assert(

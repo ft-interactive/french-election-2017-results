@@ -1,2 +1,6 @@
 test-data/
 node_modules/
+.DS_Store
+scrape
+data
+flatmap.json
