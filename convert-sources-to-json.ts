@@ -35,26 +35,45 @@ async function createGovJSON() {
 	writeFileSync('./data/gov-codes.json', JSON.stringify(codes), {encoding: 'utf-8'});
 }
 
-async function createInseeJSON() {
-	const dataString = readFileSync('./data/correspondance-code-insee-code-postal.csv', {encoding: 'utf-8'});
-	parse(dataString, {columns: true, delimiter: ';'}, (err, data) => {
-		console.dir(err);
-		const output = data.map((d: any) => {
-			const comName = d.Commune;
-			const comCode = d['Code Commune'];
-			const depName = d['Département'];
-			const depCode = d['Code Département'];
-			const regName = d['Région'];
-			const regCode = d['Code Région'];
+// async function createInseeJSON() {
+// 	const dataString = readFileSync('./data/correspondance-code-insee-code-postal.csv', {encoding: 'utf-8'});
+// 	parse(dataString, {columns: true, delimiter: ';'}, (err, data) => {
+// 		console.dir(err);
+// 		const output = data.map((d: any) => {
+// 			const comName = d.Commune;
+// 			const comCode = d['Code Commune'];
+// 			const depName = d['Département'];
+// 			const depCode = d['Code Département'];
+// 			const regName = d['Région'];
+// 			const regCode = d['Code Région'];
+//
+// 			return {
+// 				code: d['Code INSEE'],
+// 				comName,
+// 				comCode,
+// 				depName,
+// 				depCode,
+// 				regName,
+// 				regCode,
+// 			};
+// 		})
+// 		.reduce((col: any, cur: any) => {
+// 			col[cur.code] = cur;
+// 			return col;
+// 		}, {});
+//
+// 		writeFileSync('./data/insee-codes.json', JSON.stringify(output), {encoding: 'utf-8'});
+// 	});
+// }
 
+async function createInseeJSON() {
+	const dataString = readFileSync(__dirname + '/data/latest-qgis.csv', {encoding: 'utf-8'});
+	parse(dataString, {columns: true, delimiter: ','}, (err, data) => {
+		console.error(err);
+		const output = data.map((d: any) => {
 			return {
-				code: d['Code INSEE'],
-				comName,
-				comCode,
-				depName,
-				depCode,
-				regName,
-				regCode,
+				code: d.insee,
+				comName: d.nom,
 			};
 		})
 		.reduce((col: any, cur: any) => {

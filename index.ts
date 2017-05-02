@@ -7,6 +7,8 @@ import * as xml2js from 'xml2js';
 import * as cheerio from 'cheerio';
 import { writeFileSync } from 'fs';
 
+const translationTable = require('./data/government-to-insee.json');
+
 export const IS_TEST = process.env.NODE_ENV !== 'production';
 export const ENDPOINT = IS_TEST ?
 	'http://localhost:8000/' :
@@ -56,6 +58,7 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 		}).toArray();
 
 		const result = await communeIds.reduce(async (queue, id) => {
+			const translatedId = translationTable.hasOwnProperty(String(id)) ? translationTable[String(id)] : String(id);
 			try {
 				const collection = await queue;
 				// console.log(`On ${d.coddpt3car}-${id}`);
@@ -70,11 +73,12 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 				}).toArray();
 
 				const votes = Number($$('mentions > inscrits > nombre').text()) - Number($$('mentions > abstentions > nombre').text());
+
 				collection.push({
 					name: $$('libsubcom').text(),
 					reg: d.codreg,
 					dpt: d.codmindpt,
-					com: id,
+					com: translatedId,
 					votes,
 					candidates,
 				});

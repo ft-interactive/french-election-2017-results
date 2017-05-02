@@ -2,9 +2,8 @@
  * Create a translation table
  */
 
-const _insee = require('./data/communes-qgis.json');
+const insee = require('./data/insee-codes.json');
 const gov   = require('./data/gov-codes.json');
-const diff  = require('./data/IDS_DIFF.json');
 const {compareTwoStrings: compare} = require('string-similarity');
 const {remove} = require('diacritics');
 const {writeFileSync} = require('fs');
@@ -17,14 +16,6 @@ const unmatched2: string[] = [];
 const unmatched3: string[] = [];
 const unmatched4: string[] = [];
 const lowDiceScore: string[] = [];
-
-const insee = _insee.reduce((last: any, curr: any) => {
-	last[curr.insee] = {
-		code: curr.insee,
-		comName: curr.nom,
-	};
-	return last;
-}, {});
 
 console.log(`Total, Ministère Interieur dataset: ${Object.keys(gov).length}`);
 console.log(`Total, INSEE dataset: ${Object.keys(insee).length}`);

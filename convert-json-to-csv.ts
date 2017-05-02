@@ -26,7 +26,7 @@ const spreadsheet = createReadStream('./data/results-spreadsheet-template.csv');
 const output = createWriteStream('./data/complete.csv');
 
 // Import our JSON file and flatten it into an object indexed by departement + commune code.
-const results: FEResult = require('./output.json');
+const results: FEResult = require('./data/output.json');
 const totalVotes: any = {};
 const resultsFlat = Object.keys(results).reduce((col, key) => {
 	results[key].forEach(item => {
