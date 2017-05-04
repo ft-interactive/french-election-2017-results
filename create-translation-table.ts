@@ -20,20 +20,20 @@ const lowDiceScore: string[] = [];
 console.log(`Total, Ministère Interieur dataset: ${Object.keys(gov).length}`);
 console.log(`Total, INSEE dataset: ${Object.keys(insee).length}`);
 
-const table = Object.entries(gov).reduce((col: any, [code, data]) => {
+const govToInsee = Object.entries(gov).reduce((gov: any, [code, data]) => {
 	const normalised = remove(data.comName).toUpperCase();
 
 	// Strategy 0: Non renseigné (excluded from dataset as have no INSEE code)
-	if (data.regName === 'Non renseigné') return col;
+	if (data.regName === 'Non renseigné') return gov;
 	else unmatched0.push(code);
 
 	// Strategy 1: straight 1:1 mapping
 	if (insee.hasOwnProperty(code)) {
-		col[code] = insee[code].code;
+		gov[code] = insee[code].code;
 
 		checkScore(insee[code].comName, normalised, code);
 
-		return col;
+		return gov;
 	} else {
 		unmatched1.push(code);
 	}
@@ -41,11 +41,11 @@ const table = Object.entries(gov).reduce((col: any, [code, data]) => {
 	// Strategy 2: remove first digit of departement code
 	const newCode = String(data.depCode) + String(data.comCode.slice(1));
 	if (insee.hasOwnProperty(newCode)) {
-		col[code] = insee[newCode].code;
+		gov[code] = insee[newCode].code;
 
 		checkScore(insee[newCode].comName, normalised, code);
 
-		return col;
+		return gov;
 	} else {
 		unmatched2.push(code);
 	}
@@ -53,60 +53,61 @@ const table = Object.entries(gov).reduce((col: any, [code, data]) => {
 	let replaced = '';
 	// Strategy 3: Handle metropolitan areas separately
 	switch (data.depCode) {
-		case '75': // Paris
+		case '75': // Paris arrondisements
 			replaced = data.depCode + data.comCode.replace('056AR', '1');
+			/*if (code === '75056') { // "Capitale d'état"
+			console.log('PARIS');
+				gov[code] = '75101';
 
-			if (code === '75056') { // "Capitale d'état"
-				col[code] = '75101';
-
-				return col;
-			} else if (insee.hasOwnProperty(replaced)) {
-				col[code] = replaced;
+				return gov;
+			} else */
+			if (insee.hasOwnProperty(replaced)) {
+				gov[code] = replaced;
 
 				checkScore(insee[replaced].comName, normalised, code);
 
-				return col;
+				return gov;
 			} else {
 				unmatched3.push(code);
-				return col;
+				return gov;
 			}
 
 		case '69': // Rhône
 			replaced = data.depCode + data.comCode.replace('123AR0', '38');
 
 			if (code === '69123') { // Lyon "Préfecture de région"
-				col[code] = '69381';
+				gov[code] = '69381';
 
-				return col;
+				return gov;
 			} else if (insee.hasOwnProperty(replaced)) {
 
-				col[code] = replaced;
+				gov[code] = replaced;
 
 				checkScore(insee[replaced].comName, normalised, code);
 
-				return col;
+				return gov;
 			} else {
 				unmatched3.push(code);
-				return col;
+				return gov;
 			}
 
 		case '13': // Bouches-du-Rhône
 			replaced = data.depCode + data.comCode.replace('055AR', '2');
 			if (code === '13055') { // Marseille "Préfecture de région"
-				col[code] = '13201';
+				gov[code] = '13201';
 
-				return col;
+				return gov;
 			} else if (insee.hasOwnProperty(replaced)) {
-				col[code] = replaced;
+				gov[code] = replaced;
 
 				checkScore(insee[replaced].comName, normalised, code);
 
-				return col;
+				return gov;
 			} else if (data.comCode.match('SR')) { // Marseille secteurs have no INSEE code; discard.
-				return col;
+				return gov;
 			} else {
 				unmatched3.push(code);
-				return col;
+				return gov;
 			}
 
 		default:
@@ -118,13 +119,13 @@ const table = Object.entries(gov).reduce((col: any, [code, data]) => {
 		case '55138': // "Culey"
 		case '76095': // "Bihorel"
 		case '76601': // "Saint-Lucien"
-			col[code] = code;
-			return col;
+			gov[code] = code;
+			return gov;
 		default:
 			unmatched4.push(code);
 	}
 
-	return col;
+	return gov;
 }, {});
 
 function checkScore(_string1: string, string2: string, code: string) {
@@ -150,9 +151,12 @@ console.log(`Found in stage 4: ${unmatched3.length - unmatched4.length}`);
 console.log(`Remaining: ${unmatched4.length}`);
 console.dir(unmatched4);
 
-writeFileSync(`${__dirname}/data/government-to-insee.json`, JSON.stringify(table), {encoding: 'utf-8'});
+writeFileSync(`${__dirname}/data/government-to-insee.json`, JSON.stringify(govToInsee), {encoding: 'utf-8'});
 writeFileSync(`${__dirname}/data/dubious-codes.json`, JSON.stringify(lowDiceScore), {encoding: 'utf-8'});
-stringify(Object.entries(table).unshift(['ministere interieur', 'insee']),
+
+const tableEntries = Object.entries(govToInsee);
+tableEntries.unshift(['ministere interieur', 'insee']);
+stringify(tableEntries,
 	{header: true}, (err: Error, data: string) => {
 	writeFileSync(`${__dirname}/data/code-translation-table.csv`, data, {encoding: 'utf-8'});
 	console.log('done!');
