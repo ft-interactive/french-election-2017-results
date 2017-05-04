@@ -19,7 +19,7 @@ import {
 	FERegion,
 	FECandidat,
 	FEResult,
-} from './index';
+} from './create-output-json';
 
 // Create an input and an output stream
 const spreadsheet = createReadStream('./data/results-spreadsheet-template.csv');
@@ -31,18 +31,6 @@ const totalVotes: any = {};
 const resultsFlat = Object.keys(results).reduce((col, key) => {
 	results[key].forEach(item => {
 		col[`${item.dpt}${item.com}`] = item.candidates.sort((a, b) => Number(a.nbvoix) - Number(b.nbvoix));
-		// if (item.com.length === 3) {
-		// 	// Sort it by number of votes to get outcome order.
-		// 	col[`${item.dpt}${item.com}`] = item.candidates.sort((a, b) => Number(a.nbvoix) - Number(b.nbvoix));
-		// } else { //
-		// 	console.dir(item.com);
-		// 	const com = item.com.slice(0, -1);
-		// 	if (!col.hasOwnProperty(`${item.dpt}${com}`)) {
-		// 		col[`${item.dpt}${com}`] = [];
-		// 	}
-		// 	col[`${item.dpt}${com}`].push(item.candidates.sort((a, b) => Number(a.nbvoix) - Number(b.nbvoix)));
-		// 	totalVotes[`${item.dpt}${com}`] += item.votes;
-		// }
 	});
 
 	return col;
