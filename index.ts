@@ -6,20 +6,21 @@ import axios from 'axios';
 import * as xml2js from 'xml2js';
 import * as cheerio from 'cheerio';
 import { readFileSync, writeFileSync } from 'fs';
-const {remove} = require('diacritics');
+const { remove } = require('diacritics');
 import * as stringify from 'csv-stringify';
 import * as parse from 'csv-parse';
 
 const translationTable = require('./data/government-to-insee.json');
 
 export const IS_TEST = process.env.NODE_ENV !== 'production';
+export const IS_LOCAL = process.env.hasOwnProperty('IS_LOCAL') ? process.env.IS_LOCAL : true;
 export const ENDPOINT = 'http://elections.interieur.gouv.fr/telechargements/PR2017/';
 export const {
 	ROUND = 1, // Set $ROUND to '2' for second round
 } = process.env;
 
 export const acquire = async (filepath: string) => {
-	if (IS_TEST) return readFileSync(`${__dirname}/scrape/elections.interieur.gouv.fr/telechargements/PR2017/resultatsT${ROUND}/${filepath}`, 'utf-8');
+	if (IS_LOCAL) return readFileSync(`${__dirname}/${IS_TEST ? 'test-data' : 'results/elections.interieur.gouv.fr/telechargements/PR2017'}/resultatsT${ROUND}/${filepath}`, 'utf-8');
 	else return (await axios.get(`${ENDPOINT}/resultatsT${ROUND}/${filepath}`)).data;
 };
 
@@ -45,15 +46,15 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 				// console.log(`On ${d.coddpt3car}-${id}`);
 
 				const $$ = cheerio.load(await acquire(`${filePath}/${d.coddpt3car}${id}.xml`));
-
-				const candidates = $$('candidats > candidat').map(function(){
+				const tour = $$(`tours > tour > numtour:contains(${ROUND})`).parent();
+				const candidates = $$(`resultats > candidats > candidat`, tour).map(function(){
 					return $$(this).children().toArray().reduce((coll, child) => {
 						coll[child.tagName] = $$(child).text().trim();
 						return coll;
 					}, <FECandidat>{});
 				}).toArray();
 
-				const votes = Number($$('mentions > inscrits > nombre').text()) - Number($$('mentions > abstentions > nombre').text());
+				const votes = Number($$(`tours > tour:contains(${ROUND}) > mentions > inscrits > nombre`).text()) - Number($$('mentions > abstentions > nombre').text());
 
 				collection.push({
 					name: $$('libsubcom').text(),
@@ -84,9 +85,7 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 	return $('departement').toArray().map((d, i) => {
 		return {
 			coddpt3car: $(d).find('coddpt3car').text(),
-			// coddpt: $(d).find('coddpt').text(),
 			codmindpt: $(d).find('codmindpt').text(),
-			// libdpt: $(d).find('libdpt').text(),
 			codreg3car: $(d).find('codreg3car').text(),
 			codreg: $(d).find('codreg').text(),
 		};
@@ -174,7 +173,7 @@ function generateResultsCSV(data: Flatmap) {
 		columns,
 	}, (err: Error, parsed: string) => {
 		console.error(err);
-		writeFileSync('./data/winners.csv', parsed, {encoding: 'utf8'});
+		writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}.csv`, parsed, {encoding: 'utf8'});
 	});
 }
 
