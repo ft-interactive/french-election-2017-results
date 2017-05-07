@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/ft-interactive/french-election-2017-results#readme",
   "dependencies": {
-    "@types/babyparse": "^0.0.30",
     "@types/chai": "^3.5.2",
     "@types/cheerio": "^0.22.1",
     "@types/csv-parse": "^1.1.8",

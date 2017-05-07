@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Election>
+  <Scrutin>
+    <Type>Présidentielle</Type>
+    <Annee>2017</Annee>
+  </Scrutin>
+  <Departement>
+    <CodDpt>69</CodDpt>
+    <CodMinDpt>69</CodMinDpt>
+    <CodDpt3Car>069</CodDpt3Car>
+    <LibDpt>Rhône</LibDpt>
+    <CodReg>84</CodReg>
+    <CodReg3Car>084</CodReg3Car>
+    <LibReg>Auvergne et Rhône-Alpes</LibReg>
+    <Tours>
+      <Tour>
+        <NumTour>2</NumTour>
+        <Communes>
+          <Commune>
+            <CodSubCom>123</CodSubCom>
+            <LibSubCom>Lyon</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:14:36</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>123AR01</CodSubCom>
+            <LibSubCom>Lyon 1er arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:04:46</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>123AR02</CodSubCom>
+            <LibSubCom>Lyon 2eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:05:29</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>123AR03</CodSubCom>
+            <LibSubCom>Lyon 3eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:07:32</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>123AR04</CodSubCom>
+            <LibSubCom>Lyon 4eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:08:23</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>123AR05</CodSubCom>
+            <LibSubCom>Lyon 5eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:09:31</HeureDerMaj>
+          </Commune>
+        </Communes>
+        <Sections>
+          <Section>
+            <CodSec>8469D</CodSec>
+            <LibSec>Rhone hors métropole de Lyon</LibSec>
+            <ResultatsComplets>O</ResultatsComplets>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:30:28</HeureDerMaj>
+          </Section>
+          <Section>
+            <CodSec>8469M</CodSec>
+            <LibSec>Métropole de Lyon</LibSec>
+            <ResultatsComplets>O</ResultatsComplets>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:37:49</HeureDerMaj>
+          </Section>
+        </Sections>
+      </Tour>
+    </Tours>
+  </Departement>
+</Election>

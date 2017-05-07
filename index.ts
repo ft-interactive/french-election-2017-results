@@ -7,7 +7,7 @@ import * as xml2js from 'xml2js';
 import * as cheerio from 'cheerio';
 import { readFileSync, writeFileSync } from 'fs';
 const { remove } = require('diacritics');
-import * as stringify from 'csv-stringify';
+import { unparse as stringify } from 'babyparse';
 import * as parse from 'csv-parse';
 
 const translationTable = require('./data/government-to-insee.json');
@@ -15,9 +15,7 @@ const translationTable = require('./data/government-to-insee.json');
 export const IS_TEST = process.env.NODE_ENV !== 'production';
 export const IS_LOCAL = process.env.hasOwnProperty('IS_LOCAL') ? process.env.IS_LOCAL : true;
 export const ENDPOINT = 'http://elections.interieur.gouv.fr/telechargements/PR2017/';
-export const {
-	ROUND = 1, // Set $ROUND to '2' for second round
-} = process.env;
+export const ROUND: number = process.env.ROUND || 1; // Set $ROUND to '2' for second roundprocess.env;
 
 export const acquire = async (filepath: string) => {
 	if (IS_LOCAL) return readFileSync(`${__dirname}/${IS_TEST ? 'test-data' : 'results/elections.interieur.gouv.fr/telechargements/PR2017'}/resultatsT${ROUND}/${filepath}`, 'utf-8');
@@ -134,12 +132,10 @@ export function createFlatMap(results: FEResult) {
 		try {
 			results[key].forEach(item => {
 				const candidatesSorted = item.candidates.sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix));
-				console.dir(item.candidates);
-				console.dir(candidatesSorted);
 				col[item.code] = {
 					candidates: candidatesSorted,
 					data: {
-						electorate: item.electorate,
+						ballots_cast: item.ballots_cast,
 						registered_voters: item.registered_voters,
 						abstaining_voters: item.abstaining_voters,
 						blank_ballots: item.blank_ballots,
@@ -161,9 +157,9 @@ export function createFlatMap(results: FEResult) {
 export function generateResultsCSV(data: Flatmap) {
 	const items = Object.entries(data).map(([code, commune]) => {
 		const candidates = commune.candidates;  // .sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix)); // Removing sort as is done in Flatmap.
-		return candidates.reduce((c, d, i) => {
+		return candidates.reduce((c, d, i, a) => {
 			const name: string = remove(d.nompsn).replace(/\s/g, '');
-			c[`${name}_ranking_2017`] = i + 1;
+			c[`${name}_ranking_2017`] = ROUND === 2 ? checkRanking(d, a) : i + 1;
 			c[`${name}_vote_pc_2017`] = Number(d.rapportexprime.replace(',', '.'));
 			c[`${name}_vote_count_2017`] = Number(d.nbvoix);
 			return c;
@@ -172,29 +168,34 @@ export function generateResultsCSV(data: Flatmap) {
 		});
 	});
 
-	const rows = items.map(Object.values);
-	const columns = Object.keys(items[0]);
-
-	stringify(rows, {
+	const output = stringify(items, {
 		header: true,
-	}, (err: Error, parsed: string) => {
-		console.error(err);
-		writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}.csv`, parsed, {encoding: 'utf8'});
 	});
+	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}.json`, JSON.stringify(items));
+	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}.csv`, output, {encoding: 'utf8'});
+}
+
+export function checkRanking(datum: FECandidat, arr: FECandidat[]) {
+	const idx = arr.findIndex(d => d.npmpsn === datum.nompsn);
+	if (idx === 0) {
+		return arr[idx + 1].nbvoix === datum.nbvoix ? 'tie' : 'win';
+	} else {
+		return arr[idx - 1].nbvoix === datum.nbvoix ? 'tie' : 'lose';
+	}
 }
 
 export function generateExtendedResultsCSV(data: Flatmap) {
 	const items = Object.entries(data).map(([code, commune]) => {
 		const candidates = commune.candidates;  // .sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix)); // Removing sort as is done in Flatmap.
-		return candidates.reduce((c, d, i) => {
+		return candidates.reduce((c, d, i, a) => {
 			const name: string = remove(d.nompsn).replace(/\s/g, '');
-			c[`${name}_ranking_2017`] = i + 1;
+			c[`${name}_ranking_2017`] = ROUND === 2 ? checkRanking(d, a) : i + 1;
 			c[`${name}_vote_pc_2017`] = Number(d.rapportexprime.replace(',', '.'));
 			c[`${name}_vote_count_2017`] = Number(d.nbvoix);
 			return c;
 		}, <FECSVRow>{
 			code,
-			electorate: commune.data.electorate,
+			ballots_cast: commune.data.ballots_cast,
 			registered_voters: commune.data.registered_voters,
 			abstaining_voters: commune.data.abstaining_voters,
 			blank_ballots: commune.data.blank_ballots,
@@ -202,18 +203,11 @@ export function generateExtendedResultsCSV(data: Flatmap) {
 			valid_ballots: commune.data.valid_ballots,
 				});
 	});
-
-	const rows = items.map(Object.values);
-	const columns = Object.keys(items[0]);
-
-	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}--extended-data.json`, JSON.stringify(items));
-	stringify(rows, {
+	const output = stringify(items, {
 		header: true,
-		columns: columns,
-	}, (err: Error, parsed: string) => {
-		console.error(err);
-		writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}--extended-data.csv`, parsed, {encoding: 'utf8'});
 	});
+	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}--extended-data.json`, JSON.stringify(items));
+	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}--extended-data.csv`, output, {encoding: 'utf8'});
 }
 
 if (process.argv.length > 1 && process.argv[2] === 'run') run();
@@ -273,12 +267,12 @@ export interface FECommune {
 	dpt: string;
 	com: string;
 	reg: string;
-	electorate: number;
 	registered_voters: number;
 	abstaining_voters: number;
 	blank_ballots: number;
 	spoiled_ballots: number;
 	valid_ballots: number;
+	ballots_cast: number;
 	candidates: Array<FECandidat>;
 }
 
@@ -286,12 +280,12 @@ interface Flatmap {
 	[key: string]: {
 		candidates: Array<FECandidat>;
 		data: {
-			electorate: number;
 			registered_voters: number;
 			abstaining_voters: number;
 			blank_ballots: number;
 			spoiled_ballots: number;
 			valid_ballots: number;
+			ballots_cast: number;
 		}
 	};
 }
@@ -299,10 +293,10 @@ interface Flatmap {
 interface FECSVRow {
 	[key: string]: string|number;
 	code: string;
-	electorate: number;
 	registered_voters: number;
 	abstaining_voters: number;
 	blank_ballots: number;
 	spoiled_ballots: number;
 	valid_ballots: number;
+	ballots_cast: number;
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Election>
+  <Scrutin>
+    <Type>Présidentielle</Type>
+    <Annee>2017</Annee>
+  </Scrutin>
+  <Departement>
+    <CodDpt>75</CodDpt>
+    <CodMinDpt>75</CodMinDpt>
+    <CodDpt3Car>075</CodDpt3Car>
+    <LibDpt>Paris</LibDpt>
+    <CodReg>11</CodReg>
+    <CodReg3Car>011</CodReg3Car>
+    <LibReg>Île-de-France</LibReg>
+    <Tours>
+      <Tour>
+        <NumTour>2</NumTour>
+        <Communes>
+          <Commune>
+            <CodSubCom>056</CodSubCom>
+            <LibSubCom>Paris</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>15:25:15</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>056AR01</CodSubCom>
+            <LibSubCom>Paris 1er arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:53:47</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>056AR02</CodSubCom>
+            <LibSubCom>Paris 2eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:54:08</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>056AR03</CodSubCom>
+            <LibSubCom>Paris 3eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:54:37</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>056AR04</CodSubCom>
+            <LibSubCom>Paris 4eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:55:07</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>056AR05</CodSubCom>
+            <LibSubCom>Paris 5eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:56:03</HeureDerMaj>
+          </Commune>
+        </Communes>
+      </Tour>
+    </Tours>
+  </Departement>
+</Election>

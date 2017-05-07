@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Election>
+  <Scrutin>
+    <Type>Présidentielle</Type>
+    <Annee>2017</Annee>
+  </Scrutin>
+  <Region>
+    <CodReg>93</CodReg>
+    <CodReg3Car>093</CodReg3Car>
+    <LibReg>Provence-Alpes-Côte d&apos;Azur</LibReg>
+    <Tours>
+      <Tour>
+        <NumTour>1</NumTour>
+        <Mentions>
+          <Inscrits>
+            <Nombre>3605876</Nombre>
+          </Inscrits>
+          <Abstentions>
+            <Nombre>1439780</Nombre>
+            <RapportInscrit>  39,93</RapportInscrit>
+          </Abstentions>
+          <Votants>
+            <Nombre>2166096</Nombre>
+            <RapportInscrit>  60,07</RapportInscrit>
+          </Votants>
+          <Blancs>
+            <Nombre>65064</Nombre>
+            <RapportInscrit>   1,80</RapportInscrit>
+            <RapportVotant>   3,00</RapportVotant>
+          </Blancs>
+          <Nuls>
+            <Nombre>43574</Nombre>
+            <RapportInscrit>   1,21</RapportInscrit>
+            <RapportVotant>   2,01</RapportVotant>
+          </Nuls>
+          <Exprimes>
+            <Nombre>2057458</Nombre>
+            <RapportInscrit>  57,06</RapportInscrit>
+            <RapportVotant>  94,98</RapportVotant>
+          </Exprimes>
+        </Mentions>
+        <Resultats>
+          <Candidats>
+            <Candidat>
+              <NumPanneauCand>1</NumPanneauCand>
+              <NomPsn>HORTALA</NomPsn>
+              <PrenomPsn>Frédéric</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>12809</NbVoix>
+              <RapportExprime>   0,62</RapportExprime>
+              <RapportInscrit>   0,36</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>2</NumPanneauCand>
+              <NomPsn>MIREPOIX</NomPsn>
+              <PrenomPsn>Achille</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>486529</NbVoix>
+              <RapportExprime>  23,65</RapportExprime>
+              <RapportInscrit>  13,49</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>3</NumPanneauCand>
+              <NomPsn>ARBOCOL</NomPsn>
+              <PrenomPsn>Nadine</PrenomPsn>
+              <CivilitePsn>Mme</CivilitePsn>
+              <NbVoix>26220</NbVoix>
+              <RapportExprime>   1,27</RapportExprime>
+              <RapportInscrit>   0,73</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>4</NumPanneauCand>
+              <NomPsn>GIRARD</NomPsn>
+              <PrenomPsn>Béatrice</PrenomPsn>
+              <CivilitePsn>Mme</CivilitePsn>
+              <NbVoix>111166</NbVoix>
+              <RapportExprime>   5,40</RapportExprime>
+              <RapportInscrit>   3,08</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>5</NumPanneauCand>
+              <NomPsn>SANJUAN</NomPsn>
+              <PrenomPsn>Norbert</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>12082</NbVoix>
+              <RapportExprime>   0,59</RapportExprime>
+              <RapportInscrit>   0,34</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>6</NumPanneauCand>
+              <NomPsn>CHAPUIS</NomPsn>
+              <PrenomPsn>Julien</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>110932</NbVoix>
+              <RapportExprime>   5,39</RapportExprime>
+              <RapportInscrit>   3,08</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>7</NumPanneauCand>
+              <NomPsn>DURAND</NomPsn>
+              <PrenomPsn>Marcel</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>113095</NbVoix>
+              <RapportExprime>   5,50</RapportExprime>
+              <RapportInscrit>   3,14</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>8</NumPanneauCand>
+              <NomPsn>JONCOUR</NomPsn>
+              <PrenomPsn>Emilie</PrenomPsn>
+              <CivilitePsn>Mme</CivilitePsn>
+              <NbVoix>284619</NbVoix>
+              <RapportExprime>  13,83</RapportExprime>
+              <RapportInscrit>   7,89</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>9</NumPanneauCand>
+              <NomPsn>POMPANON</NomPsn>
+              <PrenomPsn>Patrick</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>712682</NbVoix>
+              <RapportExprime>  34,64</RapportExprime>
+              <RapportInscrit>  19,76</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>10</NumPanneauCand>
+              <NomPsn>BAVÉLÈRE</NomPsn>
+              <PrenomPsn>François</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>108038</NbVoix>
+              <RapportExprime>   5,25</RapportExprime>
+              <RapportInscrit>   3,00</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>11</NumPanneauCand>
+              <NomPsn>MÉDÉRIC</NomPsn>
+              <PrenomPsn>Jérémie</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>10445</NbVoix>
+              <RapportExprime>   0,51</RapportExprime>
+              <RapportInscrit>   0,29</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>12</NumPanneauCand>
+              <NomPsn>LE CHEVALIER</NomPsn>
+              <PrenomPsn>Muriel</PrenomPsn>
+              <CivilitePsn>Mme</CivilitePsn>
+              <NbVoix>68841</NbVoix>
+              <RapportExprime>   3,35</RapportExprime>
+              <RapportInscrit>   1,91</RapportInscrit>
+            </Candidat>
+          </Candidats>
+        </Resultats>
+      </Tour>
+      <Tour>
+        <NumTour>2</NumTour>
+        <Mentions>
+          <Inscrits>
+            <Nombre>3604684</Nombre>
+          </Inscrits>
+          <Abstentions>
+            <Nombre>1442474</Nombre>
+            <RapportInscrit>  40,02</RapportInscrit>
+          </Abstentions>
+          <Votants>
+            <Nombre>2162210</Nombre>
+            <RapportInscrit>  59,98</RapportInscrit>
+          </Votants>
+          <Blancs>
+            <Nombre>64581</Nombre>
+            <RapportInscrit>   1,79</RapportInscrit>
+            <RapportVotant>   2,99</RapportVotant>
+          </Blancs>
+          <Nuls>
+            <Nombre>42929</Nombre>
+            <RapportInscrit>   1,19</RapportInscrit>
+            <RapportVotant>   1,99</RapportVotant>
+          </Nuls>
+          <Exprimes>
+            <Nombre>2054700</Nombre>
+            <RapportInscrit>  57,00</RapportInscrit>
+            <RapportVotant>  95,03</RapportVotant>
+          </Exprimes>
+        </Mentions>
+        <Resultats>
+          <Candidats>
+            <Candidat>
+              <NumPanneauCand>2</NumPanneauCand>
+              <NomPsn>MIREPOIX</NomPsn>
+              <PrenomPsn>Achille</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>825233</NbVoix>
+              <RapportExprime>  40,16</RapportExprime>
+              <RapportInscrit>  22,89</RapportInscrit>
+            </Candidat>
+            <Candidat>
+              <NumPanneauCand>9</NumPanneauCand>
+              <NomPsn>POMPANON</NomPsn>
+              <PrenomPsn>Patrick</PrenomPsn>
+              <CivilitePsn>M.</CivilitePsn>
+              <NbVoix>1229467</NbVoix>
+              <RapportExprime>  59,84</RapportExprime>
+              <RapportInscrit>  34,11</RapportInscrit>
+            </Candidat>
+          </Candidats>
+        </Resultats>
+      </Tour>
+    </Tours>
+  </Region>
+</Election>

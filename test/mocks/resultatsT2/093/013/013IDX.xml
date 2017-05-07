@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Election>
+  <Scrutin>
+    <Type>Présidentielle</Type>
+    <Annee>2017</Annee>
+  </Scrutin>
+  <Departement>
+    <CodDpt>13</CodDpt>
+    <CodMinDpt>13</CodMinDpt>
+    <CodDpt3Car>013</CodDpt3Car>
+    <LibDpt>Bouches-du-Rhône</LibDpt>
+    <CodReg>93</CodReg>
+    <CodReg3Car>093</CodReg3Car>
+    <LibReg>Provence-Alpes-Côte d&apos;Azur</LibReg>
+    <Tours>
+      <Tour>
+        <NumTour>2</NumTour>
+        <Communes>
+          <Commune>
+            <CodSubCom>055AR01</CodSubCom>
+            <LibSubCom>Marseille 1er arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:23:51</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>055AR02</CodSubCom>
+            <LibSubCom>Marseille 2eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:24:03</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>055AR03</CodSubCom>
+            <LibSubCom>Marseille 3eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:24:20</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>055AR04</CodSubCom>
+            <LibSubCom>Marseille 4eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:24:44</HeureDerMaj>
+          </Commune>
+          <Commune>
+            <CodSubCom>055AR05</CodSubCom>
+            <LibSubCom>Marseille 5eme arrondissement</LibSubCom>
+            <ResultatsParvenus>O</ResultatsParvenus>
+            <DateDerMaj>17-03-2017</DateDerMaj>
+            <HeureDerMaj>14:25:02</HeureDerMaj>
+          </Commune>
+        </Communes>
+      </Tour>
+    </Tours>
+  </Departement>
+</Election>
