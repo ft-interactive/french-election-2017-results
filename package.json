@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "download": "wget --mirror --no-parent -c -N http://elections.interieur.gouv.fr/telechargements/PR2017/resultatsT2 -P results/",
+    "download": "wget --mirror --no-parent -c -N http://elections.interieur.gouv.fr/telechargements/PR2017/resultatsT2/ -P results/",
     "parser": "ts-node index.ts run",
     "create-code-jsons": "ts-node convert-sources-to-json.ts gov && ts-node convert-sources-to-json.ts insee",
     "create-translation-table": "ts-node create-translation-table.ts",
