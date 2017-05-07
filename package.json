@@ -9,6 +9,7 @@
     "create-code-jsons": "ts-node convert-sources-to-json.ts gov && ts-node convert-sources-to-json.ts insee",
     "create-translation-table": "ts-node create-translation-table.ts",
     "start": "ts-node server.ts",
+    "postinstall": "npm run download && npm run parser",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
