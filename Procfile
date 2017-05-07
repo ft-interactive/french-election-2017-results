@@ -1,2 +1,2 @@
 web: npm start
-worker: npm run postinstall
+worker: npm run download && npm run parser
