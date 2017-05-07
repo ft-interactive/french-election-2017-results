@@ -4,3 +4,4 @@ node_modules/
 scrape
 data
 flatmap.json
+results/

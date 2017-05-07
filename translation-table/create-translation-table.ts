@@ -20,20 +20,20 @@ const lowDiceScore: string[] = [];
 console.log(`Total, Ministère Interieur dataset: ${Object.keys(gov).length}`);
 console.log(`Total, INSEE dataset: ${Object.keys(insee).length}`);
 
-const govToInsee = Object.entries(gov).reduce((gov: any, [code, data]) => {
+const govToInsee = Object.entries(gov).reduce((govCodes: any, [code, data]) => {
 	const normalised = remove(data.comName).toUpperCase();
 
 	// Strategy 0: Non renseigné (excluded from dataset as have no INSEE code)
-	if (data.regName === 'Non renseigné') return gov;
+	if (data.regName === 'Non renseigné') return govCodes;
 	else unmatched0.push(code);
 
 	// Strategy 1: straight 1:1 mapping
 	if (insee.hasOwnProperty(code)) {
-		gov[code] = insee[code].code;
+		govCodes[code] = insee[code].code;
 
 		checkScore(insee[code].comName, normalised, code);
 
-		return gov;
+		return govCodes;
 	} else {
 		unmatched1.push(code);
 	}
@@ -41,11 +41,11 @@ const govToInsee = Object.entries(gov).reduce((gov: any, [code, data]) => {
 	// Strategy 2: remove first digit of departement code
 	const newCode = String(data.depCode) + String(data.comCode.slice(1));
 	if (insee.hasOwnProperty(newCode)) {
-		gov[code] = insee[newCode].code;
+		govCodes[code] = insee[newCode].code;
 
 		checkScore(insee[newCode].comName, normalised, code);
 
-		return gov;
+		return govCodes;
 	} else {
 		unmatched2.push(code);
 	}
@@ -54,60 +54,60 @@ const govToInsee = Object.entries(gov).reduce((gov: any, [code, data]) => {
 	// Strategy 3: Handle metropolitan areas separately
 	switch (data.depCode) {
 		case '75': // Paris arrondisements
+			/**
+			 * Paris: 75056
+			 * Paris 1er: 75056AR01
+			 */
 			replaced = data.depCode + data.comCode.replace('056AR', '1');
-			/*if (code === '75056') { // "Capitale d'état"
-			console.log('PARIS');
-				gov[code] = '75101';
-
-				return gov;
-			} else */
 			if (insee.hasOwnProperty(replaced)) {
-				gov[code] = replaced;
+				govCodes[code] = replaced;
 
 				checkScore(insee[replaced].comName, normalised, code);
 
-				return gov;
+				return govCodes;
 			} else {
 				unmatched3.push(code);
-				return gov;
+				return govCodes;
 			}
-
 		case '69': // Rhône
 			replaced = data.depCode + data.comCode.replace('123AR0', '38');
 
 			if (code === '69123') { // Lyon "Préfecture de région"
-				gov[code] = '69381';
+				govCodes[code] = '69381';
 
-				return gov;
+				return govCodes;
 			} else if (insee.hasOwnProperty(replaced)) {
 
-				gov[code] = replaced;
+				govCodes[code] = replaced;
 
 				checkScore(insee[replaced].comName, normalised, code);
 
-				return gov;
+				return govCodes;
 			} else {
 				unmatched3.push(code);
-				return gov;
+				return govCodes;
 			}
 
 		case '13': // Bouches-du-Rhône
 			replaced = data.depCode + data.comCode.replace('055AR', '2');
+			// CodDpt = 13
+			// CodSubCom = 055AR01
+			// Marseille 1er Arr = 13201
 			if (code === '13055') { // Marseille "Préfecture de région"
-				gov[code] = '13201';
+				govCodes[code] = '13201';
 
-				return gov;
+				return govCodes;
 			} else if (insee.hasOwnProperty(replaced)) {
-				gov[code] = replaced;
+				govCodes[code] = replaced;
 
 				checkScore(insee[replaced].comName, normalised, code);
 
-				return gov;
+				return govCodes;
 			} else if (data.comCode.match('SR')) { // Marseille secteurs have no INSEE code; discard.
-				return gov;
+				return govCodes;
 			} else {
 				unmatched3.push(code);
-				return gov;
+				return govCodes;
 			}
 
 		default:
@@ -119,13 +119,13 @@ const govToInsee = Object.entries(gov).reduce((gov: any, [code, data]) => {
 		case '55138': // "Culey"
 		case '76095': // "Bihorel"
 		case '76601': // "Saint-Lucien"
-			gov[code] = code;
-			return gov;
+			govCodes[code] = code;
+			return govCodes;
 		default:
 			unmatched4.push(code);
 	}
 
-	return gov;
+	return govCodes;
 }, {});
 
 function checkScore(_string1: string, string2: string, code: string) {

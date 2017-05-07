@@ -29,7 +29,7 @@ export const acquire = async (filepath: string) => {
  * @param  {FEDepartement} d    A departement object from the index file
  * @return {Promise<FEResult>}            Promise resolving to a FEResult object
  */
-const fetchResultsDepartement = async (d: FEDepartement) => {
+export const fetchResultsDepartement = async (d: FEDepartement) => {
 	if (d.codreg3car === '000' && d.coddpt3car === '099') return; // Ignore overseas
 	const filePath = `${d.codreg3car}/${d.coddpt3car}`;
 
@@ -40,8 +40,9 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 		}).toArray();
 
 		const result = await communeIds.reduce(async (queue, id) => {
-			const translatedId = translationTable.hasOwnProperty(String(id)) ? translationTable[String(id)] : String(id);
 			try {
+				const combinedCode = d.coddpt + String(id);
+				const translatedId = translationTable[combinedCode];
 				const collection = await queue;
 				// console.log(`On ${d.coddpt3car}-${id}`);
 
@@ -54,14 +55,25 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 					}, <FECandidat>{});
 				}).toArray();
 
-				const votes = Number($$(`tours > tour:contains(${ROUND}) > mentions > inscrits > nombre`).text()) - Number($$('mentions > abstentions > nombre').text());
+				const registered_voters = Number($$(`tours > tour:contains(${ROUND}) > mentions > inscrits > nombre`).text()); // Formerly "electorate"
+				const ballots_cast = Number($$(`tours > tour:contains(${ROUND}) > mentions > votants > nombre`).text()); // Formerly "registered_voters"
+				const abstaining_voters = Number($$(`tours > tour:contains(${ROUND}) > mentions > abstentions > nombre`).text());
+				const blank_ballots = Number($$(`tours > tour:contains(${ROUND}) > mentions > blancs > nombre`).text());
+				const spoiled_ballots = Number($$(`tours > tour:contains(${ROUND}) > mentions > nuls > nombre`).text());
+				const valid_ballots = Number($$(`tours > tour:contains(${ROUND}) > mentions > exprimes > nombre`).text());
 
 				collection.push({
+					code: translatedId,
 					name: $$('libsubcom').text(),
 					reg: d.codreg,
 					dpt: d.codmindpt,
-					com: translatedId,
-					votes,
+					com: id,
+					registered_voters,
+					abstaining_voters,
+					ballots_cast,
+					blank_ballots,
+					spoiled_ballots,
+					valid_ballots,
 					candidates,
 				});
 
@@ -80,67 +92,61 @@ const fetchResultsDepartement = async (d: FEDepartement) => {
 };
 
 //// Main procedure
-(async () => {
-	const $ = cheerio.load(await acquire(`index.xml`));
-	return $('departement').toArray().map((d, i) => {
-		return {
-			coddpt3car: $(d).find('coddpt3car').text(),
-			codmindpt: $(d).find('codmindpt').text(),
-			codreg3car: $(d).find('codreg3car').text(),
-			codreg: $(d).find('codreg').text(),
-		};
-	}).reduce(async (queue, item) => {
-		try {
-			const collection = await queue;
-			console.info(`On ${item.coddpt3car}`);
-			collection[item.coddpt3car] = await fetchResultsDepartement(item);
-			return collection;
-		} catch (e) {
-			console.error(`Error on departement: ${item.coddpt3car}`);
-			return queue;
-		}
-	}, Promise.resolve<FEResult>({}));
-})()
-	.then(data => {
-		try {
-			writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/output.json`, JSON.stringify(data), {encoding: 'utf8'});
-			const flatmap = createFlatMap(data);
-			generateResultsCSV(flatmap);
-		} catch (e) {
-			console.error(e);
-		}
-	});
+export async function run() {
+	(async () => {
+		const $ = cheerio.load(await acquire(`index.xml`));
+		return $('departement').toArray().map((d, i) => {
+			return {
+				coddpt3car: $(d).find('coddpt3car').text(),
+				coddpt: $(d).find('coddpt').text(),
+				codmindpt: $(d).find('codmindpt').text(),
+				codreg3car: $(d).find('codreg3car').text(),
+				codreg: $(d).find('codreg').text(),
+			};
+		}).reduce(async (queue, item) => {
+			try {
+				const collection = await queue;
+				console.info(`On ${item.coddpt}`);
+				collection[item.coddpt] = await fetchResultsDepartement(item);
+				return collection;
+			} catch (e) {
+				console.error(`Error on departement: ${item.coddpt3car}`);
+				return queue;
+			}
+		}, Promise.resolve<FEResult>({}));
+	})()
+		.then(data => {
+			try {
+				writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/output.json`, JSON.stringify(data), {encoding: 'utf8'});
+				const flatmap = createFlatMap(data);
+				generateResultsCSV(flatmap);
+				generateExtendedResultsCSV(flatmap);
+			} catch (e) {
+				console.error(e);
+			}
+		});
+}
 
-// getIndex().then(async (data: FEIndex) => {
-// 	return await data.departements.departement.reduce(async (queue, item) => {
-// 		try {
-// 			const collection = await queue;
-// 			console.info(`On ${item.coddpt3car}`);
-// 			collection[item.coddpt3car] = await fetchResultsDepartement(item);
-// 			return collection;
-// 		} catch (e) {
-// 			console.error(`Error on departement: ${item.coddpt3car}`);
-// 			return queue;
-// 		}
-// 	}, Promise.resolve<FEResult>({}));
-// })
-// .then(data => {
-// 	try {
-// 		writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/output.json`, JSON.stringify(data), {encoding: 'utf8'});
-// 		const flatmap = createFlatMap(data);
-// 		generateResultsCSV(flatmap);
-// 	} catch (e) {
-// 		console.error(e);
-// 	}
-// });
-
-function createFlatMap(results: FEResult) {
+export function createFlatMap(results: FEResult) {
 	return Object.keys(results)
 	.reduce((col, key) => {
 		if (!results[key]) return col;
 		try {
 			results[key].forEach(item => {
-				col[`${item.dpt}${item.com}`] = item.candidates.sort((a, b) => Number(a.nbvoix) - Number(b.nbvoix));
+				const candidatesSorted = item.candidates.sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix));
+				console.dir(item.candidates);
+				console.dir(candidatesSorted);
+				col[item.code] = {
+					candidates: candidatesSorted,
+					data: {
+						electorate: item.electorate,
+						registered_voters: item.registered_voters,
+						abstaining_voters: item.abstaining_voters,
+						blank_ballots: item.blank_ballots,
+						spoiled_ballots: item.spoiled_ballots,
+						valid_ballots: item.valid_ballots,
+					},
+				};
 			});
 
 			return col;
@@ -152,13 +158,14 @@ function createFlatMap(results: FEResult) {
 	}, <Flatmap>{});
 }
 
-function generateResultsCSV(data: Flatmap) {
-	const items = Object.entries(data).map(([code, _candidates]) => {
-		const candidates = _candidates.sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix));
+export function generateResultsCSV(data: Flatmap) {
+	const items = Object.entries(data).map(([code, commune]) => {
+		const candidates = commune.candidates;  // .sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix)); // Removing sort as is done in Flatmap.
 		return candidates.reduce((c, d, i) => {
 			const name: string = remove(d.nompsn).replace(/\s/g, '');
 			c[`${name}_ranking_2017`] = i + 1;
 			c[`${name}_vote_pc_2017`] = Number(d.rapportexprime.replace(',', '.'));
+			c[`${name}_vote_count_2017`] = Number(d.nbvoix);
 			return c;
 		}, <FECSVRow>{
 			code,
@@ -170,12 +177,48 @@ function generateResultsCSV(data: Flatmap) {
 
 	stringify(rows, {
 		header: true,
-		columns,
 	}, (err: Error, parsed: string) => {
 		console.error(err);
 		writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}.csv`, parsed, {encoding: 'utf8'});
 	});
 }
+
+export function generateExtendedResultsCSV(data: Flatmap) {
+	const items = Object.entries(data).map(([code, commune]) => {
+		const candidates = commune.candidates;  // .sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix)); // Removing sort as is done in Flatmap.
+		return candidates.reduce((c, d, i) => {
+			const name: string = remove(d.nompsn).replace(/\s/g, '');
+			c[`${name}_ranking_2017`] = i + 1;
+			c[`${name}_vote_pc_2017`] = Number(d.rapportexprime.replace(',', '.'));
+			c[`${name}_vote_count_2017`] = Number(d.nbvoix);
+			return c;
+		}, <FECSVRow>{
+			code,
+			electorate: commune.data.electorate,
+			registered_voters: commune.data.registered_voters,
+			abstaining_voters: commune.data.abstaining_voters,
+			blank_ballots: commune.data.blank_ballots,
+			spoiled_ballots: commune.data.spoiled_ballots,
+			valid_ballots: commune.data.valid_ballots,
+				});
+	});
+
+	const rows = items.map(Object.values);
+	const columns = Object.keys(items[0]);
+
+	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}--extended-data.json`, JSON.stringify(items));
+	stringify(rows, {
+		header: true,
+		columns: columns,
+	}, (err: Error, parsed: string) => {
+		console.error(err);
+		writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}--extended-data.csv`, parsed, {encoding: 'utf8'});
+	});
+}
+
+if (process.argv.length > 1 && process.argv[2] === 'run') run();
+
+// Interfaces
 
 export interface FEIndex {
 	scrutin: {
@@ -191,17 +234,11 @@ export interface FEIndex {
 }
 
 export interface FEDepartement {
-	// coddpt: string;
 	coddpt3car: string;
+	coddpt: string;
 	codmindpt: string;
-	// libdpt: string;
 	codreg: string;
 	codreg3car: string;
-	// datedermaj: string;
-	// heuredermaj: string;
-	// datederextract: string;
-	// heurederextract: string;
-	// complet: string;
 }
 
 export interface FERegion {
@@ -231,53 +268,41 @@ export interface FEResult {
 }
 
 export interface FECommune {
+	code: string;
 	name: string;
 	dpt: string;
 	com: string;
 	reg: string;
-	votes: string;
+	electorate: number;
+	registered_voters: number;
+	abstaining_voters: number;
+	blank_ballots: number;
+	spoiled_ballots: number;
+	valid_ballots: number;
 	candidates: Array<FECandidat>;
 }
 
 interface Flatmap {
-	[key: string]: Array<FECandidat>;
+	[key: string]: {
+		candidates: Array<FECandidat>;
+		data: {
+			electorate: number;
+			registered_voters: number;
+			abstaining_voters: number;
+			blank_ballots: number;
+			spoiled_ballots: number;
+			valid_ballots: number;
+		}
+	};
 }
 
 interface FECSVRow {
 	[key: string]: string|number;
 	code: string;
-	FA_ranking_2012: number;
-	FA_vote_pc_2012: number;
-	FN_ranking_2012: number;
-	FN_vote_pc_2012: number;
-	GRN_ranking_2012: number;
-	GRN_vote_pc_2012: number;
-	LF_ranking_2012: number;
-	LF_vote_pc_2012: number;
-	LO_ranking_2012: number;
-	LO_vote_pc_2012: number;
-	MODEM_ranking_2012: number;
-	MODEM_vote_pc_2012: number;
-	NPA_ranking_2012: number;
-	NPA_vote_pc_2012: number;
-	REP_ranking_2012: number;
-	REP_vote_pc_2012: number;
-	SEP_ranking_2012: number;
-	SEP_vote_pc_2012: number;
-	SOC_ranking_2012: number;
-	SOC_vote_pc_2012: number;
-	lepen_ranking_2017: number;
-	lepen_vote_pc_2017: number;
-	lepen_change_2017: number;
-	macron_ranking_2017: number;
-	macron_vote_pc_2017: number;
-	hamon_ranking_2017: number;
-	hamon_vote_pc_2017: number;
-	hamon_change_2017: number;
-	melenchon_ranking_2017: number;
-	melenchon_vote_pc_2017: number;
-	melenchon_change_2017: number;
-	fillon_ranking_2017: number;
-	fillon_vote_pc_2017: number;
-	fillon_change_2017: number;
+	electorate: number;
+	registered_voters: number;
+	abstaining_voters: number;
+	blank_ballots: number;
+	spoiled_ballots: number;
+	valid_ballots: number;
 }
