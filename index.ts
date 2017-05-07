@@ -3,7 +3,6 @@
  */
 
 import axios from 'axios';
-import * as xml2js from 'xml2js';
 import * as cheerio from 'cheerio';
 import { readFileSync, writeFileSync } from 'fs';
 const { remove } = require('diacritics');
@@ -15,7 +14,7 @@ const translationTable = require('./data/government-to-insee.json');
 export const IS_TEST = process.env.NODE_ENV !== 'production';
 export const IS_LOCAL = process.env.hasOwnProperty('IS_LOCAL') ? process.env.IS_LOCAL : true;
 export const ENDPOINT = 'http://elections.interieur.gouv.fr/telechargements/PR2017/';
-export const ROUND: number = process.env.ROUND || 1; // Set $ROUND to '2' for second roundprocess.env;
+export const ROUND: number = Number(process.env.ROUND) || 1; // Set $ROUND to '2' for second roundprocess.env;
 
 export const acquire = async (filepath: string) => {
 	if (IS_LOCAL) return readFileSync(`${__dirname}/${IS_TEST ? 'test-data' : 'results/elections.interieur.gouv.fr/telechargements/PR2017'}/resultatsT${ROUND}/${filepath}`, 'utf-8');
@@ -159,7 +158,7 @@ export function generateResultsCSV(data: Flatmap) {
 		const candidates = commune.candidates;  // .sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix)); // Removing sort as is done in Flatmap.
 		return candidates.reduce((c, d, i, a) => {
 			const name: string = remove(d.nompsn).replace(/\s/g, '');
-			c[`${name}_ranking_2017`] = ROUND === 2 ? checkRanking(d, a) : i + 1;
+			c[`${name}_ranking_2017`] = ROUND === 2 ? checkRanking(i, a) : i + 1;
 			c[`${name}_vote_pc_2017`] = Number(d.rapportexprime.replace(',', '.'));
 			c[`${name}_vote_count_2017`] = Number(d.nbvoix);
 			return c;
@@ -175,12 +174,11 @@ export function generateResultsCSV(data: Flatmap) {
 	writeFileSync(`./${IS_TEST ? 'test-data' : 'data'}/winners_round_${ROUND}.csv`, output, {encoding: 'utf8'});
 }
 
-export function checkRanking(datum: FECandidat, arr: FECandidat[]) {
-	const idx = arr.findIndex(d => d.npmpsn === datum.nompsn);
+export function checkRanking(idx: number, arr: FECandidat[]) {
 	if (idx === 0) {
-		return arr[idx + 1].nbvoix === datum.nbvoix ? 'tie' : 'win';
+		return arr[idx + 1].nbvoix === arr[idx].nbvoix ? 'tie' : 'win';
 	} else {
-		return arr[idx - 1].nbvoix === datum.nbvoix ? 'tie' : 'lose';
+		return arr[idx - 1].nbvoix === arr[idx].nbvoix ? 'tie' : 'lose';
 	}
 }
 
@@ -189,7 +187,7 @@ export function generateExtendedResultsCSV(data: Flatmap) {
 		const candidates = commune.candidates;  // .sort((a, b) => Number(b.nbvoix) - Number(a.nbvoix)); // Removing sort as is done in Flatmap.
 		return candidates.reduce((c, d, i, a) => {
 			const name: string = remove(d.nompsn).replace(/\s/g, '');
-			c[`${name}_ranking_2017`] = ROUND === 2 ? checkRanking(d, a) : i + 1;
+			c[`${name}_ranking_2017`] = ROUND === 2 ? checkRanking(i, a) : i + 1;
 			c[`${name}_vote_pc_2017`] = Number(d.rapportexprime.replace(',', '.'));
 			c[`${name}_vote_count_2017`] = Number(d.nbvoix);
 			return c;
@@ -201,7 +199,7 @@ export function generateExtendedResultsCSV(data: Flatmap) {
 			blank_ballots: commune.data.blank_ballots,
 			spoiled_ballots: commune.data.spoiled_ballots,
 			valid_ballots: commune.data.valid_ballots,
-				});
+		});
 	});
 	const output = stringify(items, {
 		header: true,

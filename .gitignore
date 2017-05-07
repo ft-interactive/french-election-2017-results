@@ -2,6 +2,7 @@ test-data/
 node_modules/
 .DS_Store
 scrape
-data
+data/zzOld
+data/zzOld2
 flatmap.json
 results/
