@@ -16,11 +16,20 @@ export const IS_LOCAL = process.env.hasOwnProperty('IS_LOCAL') ? process.env.IS_
 export const ENDPOINT = 'http://elections.interieur.gouv.fr/telechargements/PR2017/';
 export const ROUND: number = Number(process.env.ROUND) || 1; // Set $ROUND to '2' for second roundprocess.env;
 
+console.log(`Round: ${ROUND}`);
+
 export const acquire = async (filepath: string) => {
-	if (IS_LOCAL) return readFileSync(`${__dirname}/${IS_TEST ? 'test-data' : 'results/elections.interieur.gouv.fr/telechargements/PR2017'}/resultatsT${ROUND}/${filepath}`, 'utf-8');
-	else return (await axios.get(`${ENDPOINT}/resultatsT${ROUND}/${filepath}`)).data;
+	try {
+		if (IS_LOCAL) return readFileSync(`${__dirname}/${IS_TEST ? 'test-data' : 'results/elections.interieur.gouv.fr/telechargements/PR2017'}/resultatsT${ROUND}/${filepath}`, 'utf-8');
+		else return (await axios.get(`${ENDPOINT}/resultatsT${ROUND}/${filepath}`)).data;
+	} catch (e) {
+		console.error(`File missing: ${filepath}`);
+		MISSING_FILES.push(filepath);
+	}
 };
 
+const MISSING_IDS: string[] = [];
+const MISSING_FILES: string[] = [];
 /**
  * Get communes from index, fetch each commune result, combine into object
  * @param  {FEDepartement} d    A departement object from the index file
@@ -38,12 +47,19 @@ export const fetchResultsDepartement = async (d: FEDepartement) => {
 
 		const result = await communeIds.reduce(async (queue, id) => {
 			try {
+				const collection = await queue;
+				const communeData = await acquire(`${filePath}/${d.coddpt3car}${id}.xml`);
+				if (String(id).indexOf('AR') > -1) console.dir(collection);
+				if (!communeData) return collection;
+
 				const combinedCode = d.coddpt + String(id);
 				const translatedId = translationTable[combinedCode];
-				const collection = await queue;
+
+				if (translatedId === undefined) MISSING_IDS.push(combinedCode);
+
 				// console.log(`On ${d.coddpt3car}-${id}`);
 
-				const $$ = cheerio.load(await acquire(`${filePath}/${d.coddpt3car}${id}.xml`));
+				const $$ = cheerio.load(communeData);
 				const tour = $$(`tours > tour > numtour:contains(${ROUND})`).parent();
 				const candidates = $$(`resultats > candidats > candidat`, tour).map(function(){
 					return $$(this).children().toArray().reduce((coll, child) => {
@@ -52,12 +68,12 @@ export const fetchResultsDepartement = async (d: FEDepartement) => {
 					}, <FECandidat>{});
 				}).toArray();
 
-				const registered_voters = Number($$(`tours > tour:contains(${ROUND}) > mentions > inscrits > nombre`).text()); // Formerly "electorate"
-				const ballots_cast = Number($$(`tours > tour:contains(${ROUND}) > mentions > votants > nombre`).text()); // Formerly "registered_voters"
-				const abstaining_voters = Number($$(`tours > tour:contains(${ROUND}) > mentions > abstentions > nombre`).text());
-				const blank_ballots = Number($$(`tours > tour:contains(${ROUND}) > mentions > blancs > nombre`).text());
-				const spoiled_ballots = Number($$(`tours > tour:contains(${ROUND}) > mentions > nuls > nombre`).text());
-				const valid_ballots = Number($$(`tours > tour:contains(${ROUND}) > mentions > exprimes > nombre`).text());
+				const registered_voters = Number(tour.find(`mentions > inscrits > nombre`).text()); // Formerly "electorate"
+				const ballots_cast = Number(tour.find(`mentions > votants > nombre`).text()); // Formerly "registered_voters"
+				const abstaining_voters = Number(tour.find(`mentions > abstentions > nombre`).text());
+				const blank_ballots = Number(tour.find(`mentions > blancs > nombre`).text());
+				const spoiled_ballots = Number(tour.find(`mentions > nuls > nombre`).text());
+				const valid_ballots = Number(tour.find(`mentions > exprimes > nombre`).text());
 
 				collection.push({
 					code: translatedId,
@@ -76,7 +92,7 @@ export const fetchResultsDepartement = async (d: FEDepartement) => {
 
 				return collection;
 			} catch (ee) {
-				console.error(`Error on: ${filePath}/${d.coddpt3car}${id}.xml`);
+				console.error(`Error on commune file: ${filePath}/${d.coddpt3car}${id}.xml`);
 				return queue;
 			}
 		}, Promise.resolve([]));
@@ -114,10 +130,13 @@ export async function run() {
 	})()
 		.then(data => {
 			try {
+				writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/MISSING_IDS.json`, JSON.stringify(MISSING_IDS), {encoding: 'utf8'});
+				writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/MISSING_FILES.json`, JSON.stringify(MISSING_FILES), {encoding: 'utf8'});
 				writeFileSync(`./${IS_TEST ? 'test-data' : 'data' }/output.json`, JSON.stringify(data), {encoding: 'utf8'});
 				const flatmap = createFlatMap(data);
 				generateResultsCSV(flatmap);
 				generateExtendedResultsCSV(flatmap);
+				console.log('DONE!');
 			} catch (e) {
 				console.error(e);
 			}
